@@ -82,7 +82,6 @@ def r(board, deep, alpha, beta, role, step, steps, spread):
         board.AIput(item["p"], role)  # 在可能获胜的节点上落子
         _deep = deep - 1
         _spread = spread
-        print("r", _spread)
 
         # if _spread < C["spreadLimit"]:
         #     #  冲四延伸

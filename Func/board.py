@@ -117,16 +117,17 @@ class Board:
 
             if clear:
                 self._stepsTail.clear()  # 下棋后就不能悔棋了
-                winList = self.succession([p[0], p[1]], self.who)
+                winList = self.succession([p[0], p[1]], role)
                 if winList:
                     self.afterWin(winList)
                     self.isfinish = True  # 获胜了不能再继续落子了
-                    self.whoID["text"] = f'{tr[self.who]}方获胜'
+                    self.whoID["text"] = f'{tr[role]}方获胜'
                     self.whoID["foreground"] = "red"
                     return
 
             self.reverse()  # 下一次棋翻转一次角色
             self.whoID["text"] = f'轮到{tr[self.who]}方执棋'
+            self.draw()
 
     def succession(self, p, role):
         '''
@@ -166,6 +167,7 @@ class Board:
                 else:
                     break
             if len(winList) >= self._num:
+                print(f"获胜坐标{winList}")
                 return winList
 
     def afterWin(self, winList):
@@ -206,7 +208,11 @@ class Board:
 
     def draw(self):
         '''平局判断'''
-        pass
+        if (len(np.extract(self._board == 0, self._board)) == 0
+                and not self.isfinish):
+            self.whoID["text"] = "平局"
+            self.whoID["foreground"] = "red"
+            messagebox.showinfo(title='啊', message='平局了')
 
 
 class Oneself_board(Board):
@@ -556,13 +562,21 @@ class AI_board(Board):
             x, y = self.find_pos(event.x, event.y)  # 获取落子坐标
             if (x is not None and y is not None
                     and self._board[x, y] == R["empty"]):
-                self.put([x, y], self.who)  # 落子
+                self.put([x, y], R["oneself"])  # 落子
                 # 落子后更新 zobrist 键值
-                self._zobrist.go(x, y, self.who)
+                self._zobrist.go(x, y, R["oneself"])
                 # 更新分数
                 self.updateScore([x, y])
-                p = deepAll(self, self._depth)
-                self.put(p, R["rival"])
+
+                # 只要还没赢 AI 就落子
+                if not self.isfinish:
+                    # 获取坐标
+                    p = deepAll(self, self._depth)
+                    self.put(p, R["rival"])
+                    # 电脑落子后更新分数
+                    self.updateScore(p)
+                    # 电脑落子后更新 zobrist 键值
+                    self._zobrist.go(x, y, R["oneself"])
 
     def quit(self, root, HOME):
         root.destroy()
