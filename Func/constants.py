@@ -1,11 +1,11 @@
 #########################
 #         角色          #
 #########################
-R = {
-    "empty": 0,  # 无子
-    "com": 1,  # AI
-    "hum": 2  # 玩家
-}
+
+R = {"empty": 0, "rival": 1, "oneself": 2}  # 角色表
+r = {1: "black", 2: "white"}  # 执子颜色
+tr = {1: "黑", 2: "白"}  # 执子方
+NO = [x for x in range(1, 20)]  # 1 到 20 列表, 用于生成棋盘标识
 
 #########################
 #        评分标准        #
@@ -34,16 +34,10 @@ threshold = 1.15
 #         配置项         #
 #########################
 C = {
-    "searchDeep": 8,  # 搜索深度
+    "searchDeep": 4,  # 搜索深度
     "countLimit": 20,  # gen 函数返回的节点数量上限
-    "timeLimit": 100,  # 时间限制,秒
-    "vcxDeep": 5,  # 算杀深度
-    "random": False,  # 棋面评分一致时是否随机走一个
-    "onlyThrees": True,  # 只考虑分数大于活三
-
+    "onlyThrees": False,  # 只考虑分数大于活三
     # 提升搜索速度
-    "spreadLimit": 1,  # 单步延伸,长度限制
-    "star": True,  # 是否开启 starspread
-    "cache": True,
-    "window": False,  # 是否启用期望窗口
+    "spreadLimit": 1,  # 单步延伸, 长度限制
+    "cache": True
 }

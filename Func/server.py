@@ -1,20 +1,19 @@
-# TCP 协议
 from socket import socket, AF_INET, SOCK_STREAM
-# 多线程
 from threading import Thread
 from time import strftime, localtime
-import json
+from json_byte import json_to_byte, byte_to_json
 
 
+# 服务器
 class server:
     def __init__(self, HOST, PORT) -> None:
         self.HOST = HOST  # 服务器 IP
         self.PORT = PORT  # 服务器端口
-        self.online = []  # 连接列表/在线列表(套接字对象)
-        self.IP_PORT = []  # 与套接字对应的 ip/端口列表
-        self.contact = {}  # 对手表
+        self.online = []  # 连接玩家的套接字对象
+        self.IP_PORT = []  # 与套接字对象对应的 ip/端口列表
+        self.contact = {}  # 玩家对战关联表
 
-    def start(self, ):
+    def start(self):
         '''
         开启服务器
         '''
@@ -24,193 +23,127 @@ class server:
         # 服务器监听
         s.listen()
 
-        # 两个线程
-        # 一个用来监听哪个客户端连接上了服务器(accept)
-        # 一个用来监听客户端发过来的信息(recv)
         while True:
             conn, addr = s.accept()
             self.online.append(conn)  # 保存已建立连接 conn 对象
             self.IP_PORT.append(conn.getpeername())  # 保存对应的IP/端口
-            print('来自 %s:%s 的连接' % (addr[0], addr[1]))
-
-            self.sendOnline()  # 发送在线人员列表
+            print(f'来自 {addr[0]}:{addr[1]} 的连接')
+            '''
+            只要有人连接, 就发送在线人员信息
+            '''
+            self.sendOnline()
 
             # 开启新线程读取消息
             t = Thread(target=self.receive, args=(conn, addr))
             t.start()
 
+    def search_rival_conn(self, IP, Port):
+        '''
+        根据 IP 和 Port 利用对战关联表找到对手的套接字对象
+        '''
+        try:
+            from_ = f"{IP}:{Port}"
+            to_ = self.contact[from_].split(":")
+            index = self.IP_PORT.index((to_[0], int(to_[1])))
+            return self.online[index]
+        except KeyError:
+            print("找不到指定键")
+
+    def search_conn(self, IP, Port):
+        '''
+        根据 IP 和 Port 寻找对应套接字对象
+        '''
+        index = self.IP_PORT.index((IP, Port))
+        return self.online[index]
+
     def receive(self, conn, addr):
         '''
         接收客户端消息
         '''
+        IP1 = addr[0]
+        Port1 = addr[1]
+
         while True:
             try:
-                data = conn.recv(1024)
+                res = conn.recv(1024)
                 # 如果读入数据失败, 说明远程主机主动关闭连接
-                if not data:
-                    print(f'客户端 {addr[0]}:{addr[1]} 已断开连接...')
+                if not res:
+                    print(f'客户端 {IP1}:{Port1} 已断开连接...')
                     # 删掉对应的信息
                     self.online.remove(conn)
                     self.IP_PORT.remove(conn.getpeername())
-                    conn.close()  # 关闭发送客户端
-                    # 有人下线了, 则重新发送在线人员列表
+                    # 关闭发送客户端
+                    conn.close()
+                    # 重新发送在线人员列表
                     self.sendOnline()
                     break
                 else:
-                    data_ = json.loads(data.decode('gb2312'))
-                    print(f'收到来自 {addr[0]}:{addr[1]} 的信息: {data_}')
-                    self.write(ip=addr[0], port=addr[1], data=data_)
+                    res_ = byte_to_json(res)
 
-                    if "chat" in data_:
-                        a = f"{addr[0]}:{addr[1]}"
-                        b = self.contact[a].split(":")
-                        c = (b[0], int(b[1]))
-                        index = self.IP_PORT.index(c)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "chat": {
-                                "content": data_["chat"],
-                                "IP": addr[0],
-                                "PORT": addr[1]
+                    # 将收到的数据写入日志文件
+                    self.write(ip=addr[0], port=addr[1], res=res_)
+
+                    if "invite_OK" in res_:
+                        IP2 = res_["info"]["IP"]
+                        Port2 = res_["info"]["Port"]
+
+                        c = self.search_conn(IP2, Port2)
+
+                        if res_["invite_OK"]:
+                            print(f"{IP1}:{Port1} 接受 {IP2}:{Port2} 对战")
+                            # 建立对战关联表
+                            vs_dict = {
+                                f"{IP1}:{Port1}": f"{IP2}:{Port2}",
+                                f"{IP2}:{Port2}": f"{IP1}:{Port1}"
                             }
-                        }).encode('gb2312')
+                            self.contact.update(vs_dict)
+                            s = json_to_byte({
+                                "invite_OK": True,
+                                "info": {
+                                    "IP": IP1,
+                                    "Port": Port1,
+                                    "role": res_["info"]["role"]
+                                }
+                            })
+                        else:
+                            print(f"{IP1}:{Port1} 拒绝 {IP2}:{Port2} 对战")
+                            s = json_to_byte({
+                                "invite_OK": False,
+                                "info": {
+                                    "IP": IP1,
+                                    "Port": Port1
+                                }
+                            })
                         c.send(s)
-                    elif "board" in data_:
-                        a = f"{addr[0]}:{addr[1]}"
-                        b = self.contact[a].split(":")
-                        c = (b[0], int(b[1]))
-                        index = self.IP_PORT.index(c)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "board": data_["board"]
-                        }).encode('gb2312')
+                    elif "invite" in res_:
+                        IP2 = res_["invite"]["IP"]
+                        Port2 = res_["invite"]["Port"]
+                        print(f"{IP1}:{Port1} 邀请 {IP2}:{Port2} 对战")
+
+                        c = self.search_conn(IP2, Port2)
+                        s = json_to_byte(
+                            {"invite": {
+                                "IP": IP1,
+                                "Port": Port1
+                            }})
                         c.send(s)
-                    elif "quit" in data_:
-                        a = f"{addr[0]}:{addr[1]}"
-                        b = self.contact[a].split(":")
-                        c = (b[0], int(b[1]))
-                        index = self.IP_PORT.index(c)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "quit": data_["quit"]
-                        }).encode('gb2312')
-                        c.send(s)
-                    elif "undo" in data_:
-                        a = f"{addr[0]}:{addr[1]}"
-                        b = self.contact[a].split(":")
-                        c = (b[0], int(b[1]))
-                        index = self.IP_PORT.index(c)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "undo": data_["undo"]
-                        }).encode('gb2312')
-                        c.send(s)
-                    elif "invite" in data_:
-                        a = data_["invite"]
-                        # 根据邀请对象查找套接字对象
-                        b = (a["IP"], a["port"])
-                        print(f"打算邀请的人员:{b}")
-                        index = self.IP_PORT.index(b)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "invite": {
-                                "IP": addr[0],
-                                "port": addr[1]
-                            }
-                        }).encode('gb2312')
-                        # 向对方发送邀请请求
-                        c.send(s)
-                    elif "invite_OK" in data_:
-                        # 收到接受请求
-                        a = data_["invite_OK"]
-                        b = (a["IP"], a["port"])
-                        print(f"收到{addr[0]}:{addr[1]}接受{b[0]}:{b[1]}的请求")
-                        index = self.IP_PORT.index(b)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "invite_OK": {
-                                "IP": addr[0],
-                                "port": addr[1],
-                                "role": a["role"]
-                            }
-                        }).encode('gb2312')
-                        # 向对方发送接受请求
-                        c.send(s)
-                        # 将对手互相绑定
-                        self.contact.update({
-                            f"{addr[0]}:{addr[1]}":
-                            f"{b[0]}:{b[1]}",
-                            f"{b[0]}:{b[1]}":
-                            f"{addr[0]}:{addr[1]}"
-                        })
-                    elif "board" in data_:
-                        pass
-                    elif "refuse" in data_:
-                        # 如果拒绝邀请
-                        a = data_["refuse"]
-                        b = (a["IP"], a["port"])
-                        print(f"收到{addr[0]}:{addr[1]}拒绝{b[0]}:{b[1]}的请求")
-                        index = self.IP_PORT.index(b)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "refuse": {
-                                "IP": addr[0],
-                                "port": addr[1]
-                            }
-                        }).encode('gb2312')
-                        # 向对方发送拒绝请求
-                        c.send(s)
-                    elif "undo" in data_:
-                        a = f"{addr[0]}:{addr[1]}"
-                        b = self.contact[a].split(":")
-                        c = (b[0], int(b[1]))
-                        index = self.IP_PORT.index(c)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "undo": True
-                        }).encode('gb2312')
-                        c.send(s)
-                    elif "undo_OK" in data_:
-                        a = f"{addr[0]}:{addr[1]}"
-                        b = self.contact[a].split(":")
-                        c = (b[0], int(b[1]))
-                        index = self.IP_PORT.index(c)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "undo_OK": data_["undo_OK"]
-                        }).encode('gb2312')
-                        c.send(s)
-                    elif "resume" in data_:
-                        a = f"{addr[0]}:{addr[1]}"
-                        b = self.contact[a].split(":")
-                        c = (b[0], int(b[1]))
-                        index = self.IP_PORT.index(c)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "resume": True
-                        }).encode('gb2312')
-                        c.send(s)
-                    elif "resume_OK" in data_:
-                        a = f"{addr[0]}:{addr[1]}"
-                        b = self.contact[a].split(":")
-                        c = (b[0], int(b[1]))
-                        index = self.IP_PORT.index(c)
-                        c = self.online[index]
-                        s = json.dumps({
-                            "resume_OK": data_["resume_OK"]
-                        }).encode('gb2312')
-                        c.send(s)
+                    else:
+                        c = self.search_rival_conn(IP1, Port1)
+                        c.send(res)
+
+                        if "quit" in res_:
+                            # 有用户退出了就删掉对战关联表对应内容
+                            from_ = f"{IP1}:{Port1}"
+                            self.contact.pop(from_)
             except ConnectionResetError:
                 ip, port = conn.getpeername()
-                print(f'远程主机 {ip}:{port} 意外退出...')
+                print(f'客户端 {ip}:{port} 强制关闭了连接...')
                 # 清除远程主机信息
                 self.online.remove(conn)
                 self.IP_PORT.remove(conn.getpeername())
-                # 有人下线了, 则重新发送在线人员列表
+                # 重新发送在线人员列表
                 self.sendOnline()
                 break
-            except ValueError as e:
-                print(e)
 
     def write(self, **kwarg):
         '''
@@ -220,19 +153,19 @@ class server:
         t = strftime("%Y-%m-%d %H:%M:%S", localtime())
         ip = kwarg["ip"]
         port = kwarg["port"]
-        data = kwarg["data"]
-        chatRecord = f"[{t}] # {ip}:{port}>\n{data}\n"
+        res = kwarg["res"]
+        chatRecord = f"[{t}] # {ip}:{port}>\n{res}\n"
         # 在文末追加写入内容
-        f = open("log.txt", 'a', encoding="utf-8")
+        f = open("log.txt", "a", encoding="utf-8")
         f.write(chatRecord)
 
     def sendOnline(self):
         '''
         向客户端发送在线人员信息
         '''
-        online_str = json.dumps({"online": self.IP_PORT}).encode('gb2312')
-        for conn_ in self.online:
-            conn_.send(online_str)
+        onlinePeople = json_to_byte({"online": self.IP_PORT})
+        for conn in self.online:
+            conn.send(onlinePeople)
 
 
 s = server("10.22.164.18", 50007)

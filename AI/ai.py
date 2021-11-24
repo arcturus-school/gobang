@@ -1,13 +1,9 @@
 '''
-Author: ARCTURUS
-Date: 2021-11-12 19:41:45
-LastEditTime: 2021-11-16 10:26:34
-LastEditors: ARCTURUS
-Description: AI 下棋
+AI 下棋
 '''
 
 from minimax import deepAll
-from constants import R, C
+from Func.constants import R, C
 from board import Board
 from opening import open26, board_open_center, create_zeros_board, open_match
 import random
@@ -51,10 +47,10 @@ class AI():
     '''
 
     def begin(self):
+        p = None
         if len(self.board.allSteps) > 1:
             # 采用必胜开局
             p = open_match(self.board)
-        # 如果玩家的下法不符合必胜开局
         # 或者步数只有 0 步或 1 步
         # 使用 deepAll 获取下一步棋子
         p = p or deepAll(None, C["searchDeep"])

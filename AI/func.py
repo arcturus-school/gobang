@@ -1,11 +1,7 @@
 '''
-Author: ARCTURUS
-Date: 2021-11-14 22:16:25
-LastEditTime: 2021-11-14 22:25:31
-LastEditors: ARCTURUS
-Description: 一些必要的功能
+一些必要的功能
 '''
-from constants import S, threshold
+from Func.constants import S, threshold
 import math
 
 

@@ -1,31 +1,26 @@
 '''
-Author: ARCTURUS
-Date: 2021-11-12 19:45:18
-LastEditTime: 2021-11-16 10:01:47
-LastEditors: ARCTURUS
-Description: 评分函数
+评分函数
 '''
-from constants import R, S
-
-'''
-description: 给棋盘上某个位置打分,表示如果下这里会得多少分
-param {Board} b: 棋盘对象
-param {*} px: 评分位置的行坐标
-param {*} py: 评分位置的列坐标
-param {*} role: 需要评分的角色
-param {*} dir: 需要评分的方向
-- None:全部方向
-- 0:横向
-- 1:纵向
-- 2:斜向
-- 3:斜向
-return {*}: result 评分结果
-'''
+from Func.constants import R, S
 
 
 def s(b, px, py, role, dir=None):
-    board = b.board
-    # 注:四子棋的行数不等于列数
+    '''
+    给棋盘上某个位置打分, 表示如果下这里会得多少分
+    :param {Board} b: 棋盘对象
+    :param {int} px: 评分位置的行坐标
+    :param {int} py: 评分位置的列坐标
+    :param {int} role: 需要评分的角色
+    :param {int} dir: 需要评分的方向
+    - None:全部方向
+    - 0:横向
+    - 1:纵向
+    - 2:斜向
+    - 3:斜向
+    return {int}: result 评分结果
+    '''
+    board = b._board
+    # 注: 四子棋的行数不等于列数
     rlen = board.shape[0]  # 棋盘行数
     clen = board.shape[1]  # 棋盘列数
 
@@ -116,9 +111,9 @@ def s(b, px, py, role, dir=None):
         count += secondCount
 
         # 将落子在这个位置后横向分数放入 AI 或玩家的 scoreCache 数组对应位置
-        b.scoreCache[role][0][px][py] = countToScore(count, block, empty)
+        b.scoreCache[role][0][px, py] = countToScore(count, block, empty)
 
-    result += b.scoreCache[role][0][px][py]
+    result += b.scoreCache[role][0][px, py]
 
     # 纵向 |
     if dir is None or dir == 1:
@@ -239,7 +234,7 @@ def s(b, px, py, role, dir=None):
 
             t = board[x, y]
             if t == R["empty"]:
-                if (empty == -1 and x < len - 1 and y > 0
+                if (empty == -1 and x < rlen - 1 and y > 0
                    and board[x + 1, y - 1] == role):
                     empty = count
                 else:
@@ -272,6 +267,7 @@ def s(b, px, py, role, dir=None):
             else:
                 block += 1
                 break
+            i += 1
 
         count += secondCount
 

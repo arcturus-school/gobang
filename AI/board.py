@@ -1,38 +1,24 @@
-'''
-Author: ARCTURUS
-Date: 2021-11-12 16:46:58
-LastEditTime: 2021-11-16 11:01:48
-LastEditors: ARCTURUS
-Description: 生成落子点
-'''
-
 from evaluate import s as scorePoint
 from zobrist import Zobrist
-from constants import R, S, C
+from Func.constants import R, S, C
 import numpy as np
 import math
-'''
-description: 评分修正
-param {int} type: 原始分数
-return {int}: 修正后分数
-'''
 
 
 class Board():
     '''
-    description: 棋盘初始化
-    param {*} board: 棋盘二维数组
+    棋盘初始化
+    :param {array} board: 棋盘二维数组
     '''
     def __init__(self, board):
         self.evaluateCache = {}
-        self.currentSteps = []
+        self.currentSteps = []  # 当前步骤
         self.allSteps = []  # 落子步骤记录
         self.stepsTail = []  # 悔棋步骤
         self.zobrist = Zobrist()
-        self._last = [False, False]  # 记录最后一步
 
-        # 初始化 board
-        self.board = board
+        self.board = board  # 初始化 board
+
         # 棋盘总落子数
         # 因为存在随机开局,因此棋盘开局的落子数不一定为 0
         # 使用 np 的 extract 获二维数组内不等于 0 的元素个数
@@ -61,26 +47,23 @@ class Board():
         # 当前局势打分
         self.initScore()
 
-    '''
-    description: 对当前棋盘进行打分
-    return {*}
-    '''
-
     def initScore(self):
+        '''
+        对当前棋盘进行打分
+        '''
         board = self.board
         for i, item in enumerate(board):
             for j, item_ in enumerate(item):
-                # 空位,双方都打分
+                # 空位, 双方都打分
                 if item_ == R["empty"]:
-                    # 附件必须有子才行
-                    # 在以 (i,j) 为中心的 5 × 5 范围内需要存在 2 个邻居
+                    # 但要求以 (i,j) 为中心 5 × 5 范围内存在 2 个邻居
                     if self.hasNeighbor(i, j, 2, 2):
                         cs = scorePoint(self, i, j, R["com"])
                         hs = scorePoint(self, i, j, R["hum"])
                         self.comScore[i, j] = cs
                         self.humScore[i, j] = hs
                 elif item_ == R["com"]:
-                    # 对 AI 打分,玩家此位置分数为 0
+                    # 对 AI 打分, 玩家此位置分数为 0
                     self.comScore[i, j] = scorePoint(self, i, j, R["com"])
                     self.humScore[i, j] = 0
                 elif item_ == R["hum"]:
@@ -88,12 +71,11 @@ class Board():
                     self.humScore[i, j] = scorePoint(self, i, j, R["hum"])
                     self.comScore[i, j] = 0
 
-    '''
-    description: 更新一个位置的分数
-    param {list} p: 需要更新分数的位置的坐标
-    '''
-
     def updateScore(self, p):
+        '''
+        更新一个位置的分数
+        :param {list} p: 需要更新分数的位置的坐标
+        '''
         radius = 4
         # 棋盘维度 n × m
         n = self.board.shape[0]
@@ -104,26 +86,28 @@ class Board():
 
         def update(x, y, dir):
             role = self.board[x, y]
+            '''
+            与 initScore 不同的是为空时不需要判断附近有没有子了
+            因此用 != 可以省去判断为空的部分
+            '''
 
-            # 与 initScore 不同的是为空时不需要判断附近有没有子了
-            # 因此用 != 可以省去判断为空的部分
-            # 如果该点不是玩家(空或者 AI)
             if role != R["hum"]:
+                # 如果该点不是玩家(空或者 AI)
                 cs = scorePoint(self, x, y, R["com"], dir)
                 self.comScore[x, y] = cs
             else:
-                # 是人,则 AI 分数为 0
+                # 是人, 则 AI 分数为 0
                 self.comScore[x, y] = 0
 
-            # 如果该点不是 AI(空或玩家)
             if role != R["com"]:
+                # 如果该点不是 AI(空或玩家)
                 hs = scorePoint(self, x, y, R["hum"], dir)
                 self.humScore[x, y] = hs
             else:
                 # 如果是 AI,玩家分数为 0
                 self.humScore[x, y] = 0
 
-        # 无论是不是空位,都需要更新
+        # 无论是不是空位, 都需要更新
         # 横向 ——
         for i in range(-radius, radius + 1):
             x_ = x
@@ -164,13 +148,12 @@ class Board():
                 continue
             update(x_, y_, 3)
 
-    '''
-    description: 落子
-    param {*} p: 落子坐标/[i, j]
-    param {*} role: 谁落子
-    '''
-
     def put(self, p, role):
+        '''
+        落子
+        param {*} p: 落子坐标/[i, j]
+        param {*} role: 谁落子
+        '''
         x = p[0]
         y = p[1]
         # 落子
@@ -188,12 +171,11 @@ class Board():
         # 记录下棋次数
         self.count += 1
 
-    '''
-    description: 移除棋子
-    param {*} p: 移除坐标/[i, j]
-    '''
-
     def remove(self, p):
+        '''
+        移除棋子
+        :param {list} p: 移除坐标
+        '''
         x = p[0]
         y = p[1]
         role = self.board[x, y]
@@ -208,10 +190,6 @@ class Board():
         self.currentSteps.pop()
         # 下棋次数减一次
         self.count -= 1
-
-    '''
-    description: 悔棋
-    '''
 
     def backward(self):
         # 如果只有 0 或 1 步
@@ -229,10 +207,6 @@ class Board():
             self.stepsTail.append([s, role])
             i += 1
 
-    '''
-    description: 不想悔棋了可以返回
-    '''
-
     def forward(self):
         if len(self.stepsTail) < 2:
             return
@@ -244,13 +218,12 @@ class Board():
             self.put(s[0], s[1])
             i += 1
 
-    '''
-    description: 分数修正
-    param {*} score: 分数
-    return {*}
-    '''
-
     def fixScore(self, score):
+        '''
+        分数修正
+        :param {int} score: 分数
+        :return {int} score: 修正后的分数
+        '''
         # 如果分数在活四和死四之间(10000~100000)
         if score < S["FOUR"] and score >= S["BLOCKED_FOUR"]:
             # 如果分数小于死四与活三之和(10000~11000)
@@ -267,13 +240,12 @@ class Board():
                 return S["FOUR"] * 2
         return score
 
-    '''
-    description: 评估函数的局部刷新
-    param {*} role
-    return {*}
-    '''
-
     def evaluate(self, role):
+        '''
+        评估函数的局部刷新
+        :param {int} role
+        :return {int} result: 分数
+        '''
         self.comMaxScore = 0
         self.humMaxScore = 0
 
@@ -298,18 +270,15 @@ class Board():
         result = neg * (self.comMaxScore - self.humMaxScore)
         return result
 
-    '''
-    description: 启发式评估函数
-    对某个空位进行评分,判断是否能够成五、活四等等
-    优先对这些可能会获胜的点进行递归,能够提高搜索速度/剪枝效率
-    注意区别于 evaluate.py(对四个方向进行评分)
-    param {*} role
-    param {*} onlyThrees
-    param {*} starSpread
-    return {list} 需要进行递归评分的列表
-    '''
-
     def gen(self, role):
+        '''
+        启发式评估函数
+        对某个空位进行评分, 判断是否能够成五、活四等等
+        优先对这些可能会获胜的点进行递归, 能够提高搜索速度/剪枝效率
+        注意区别于 evaluate.py(对四个方向进行评分)
+        :param {int} role
+        :return {list} 需要进行递归评分的列表
+        '''
         if self.count == 0:
             return [7, 7]
 
@@ -354,7 +323,7 @@ class Board():
                     if C["onlyThrees"] and maxScore < S["THREE"]:
                         continue
 
-                    p = [i, j]
+                    p = {"p": [i, j]}
 
                     if scoreCom >= S["FIVE"]:
                         # 先看 AI 能不能“连五”
@@ -450,14 +419,15 @@ class Board():
 
         # 降序
         def dscore(x):
-            r = self.board[x[0], x[1]]
+            r = self.board[x["p"][0], x["p"][1]]
             if r == R["com"]:
-                return self.comScore[x[0], x[1]]
+                return self.comScore[x["p"][0], x["p"][1]]
             elif r == R["hum"]:
-                return self.humScore[x[0], x[1]]
+                return self.humScore[x["p"][0], x["p"][1]]
 
         twos.sort(key=dscore, reverse=False)
 
+        # 如果没有活二就下在附近...
         result.extend(twos if len(twos) else neighbors)
 
         # 分数低的不用全部计算了
@@ -467,16 +437,15 @@ class Board():
 
         return result
 
-    '''
-    description: 判断某点附近是否存在指定数目的棋子
-    param {*} x: 行坐标
-    param {*} y: 列坐标
-    param {*} distance: 判断范围
-    param {*} count: 所需子数最小值
-    return {bool}
-    '''
-
     def hasNeighbor(self, x, y, distance, count):
+        '''
+        判断某点附近是否存在指定数目的棋子
+        :param {int} x: 行坐标
+        :param {int} y: 列坐标
+        :param {int} distance: 判断范围
+        :param {int} count: 所需子数最小值
+        :return {bool}
+        '''
         board = self.board
         n = board.shape[0]
         m = board.shape[1]

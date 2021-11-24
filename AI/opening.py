@@ -63,12 +63,12 @@ def open_match(board):
     s = board.allSteps
 
     # 判断第一步是否是 AI 下的,不是就退出
-    if board.board[s[0][0], s[0][1]] != 1:
-        return False
+    if board._board[s[0][0], s[0][1]] != 1:
+        return None
 
     # 判断走了多少步,超过两步不能用花月和浦月了
     if len(s) > 2:
-        return False
+        return None
 
     # 若 AI 先手,则 s[0] 是 AI 下的
     # s[1] 是玩家下的
@@ -83,7 +83,7 @@ def open_match(board):
     elif s[1] in a2:
         # 使用浦月开局
         return puyue_open(s[1])
-    return False
+    return None
 
 
 # 以下是五子棋的一些开局
