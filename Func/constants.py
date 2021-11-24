@@ -34,7 +34,6 @@ threshold = 1.15
 #         配置项         #
 #########################
 C = {
-    "searchDeep": 4,  # 搜索深度
     "countLimit": 20,  # gen 函数返回的节点数量上限
     "onlyThrees": False,  # 只考虑分数大于活三
     # 提升搜索速度
