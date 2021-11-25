@@ -14,7 +14,7 @@
 
   ![](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/12/202111121434589.jpg)
 
-  对于[最大最小值搜索](MiniMax.md)一章的博弈树进行剪枝可得
+  对于[极大极小值搜索](MiniMax.md)一章的博弈树进行剪枝可得
 
   ![](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/12/202111121555618.jpg)
 
@@ -26,8 +26,22 @@
 ## 代码实现
 
 ```python
+# minimax.
+def r(..., alpha, ...):
+    # ...
 
+    # 将 alpha 值与子节点分数做比较, 选出最大的分数给 alpha
+    alpha = max(best["score"], alpha)
+
+    # alpha-beta 剪枝
+    if func.greatOrEqualThan(a, beta):
+        ABcut += 1  # 剪枝数加一
+        v["score"] = MAX - 1  # 被剪枝的用极大值来记录, 但是必须比 MAX 小
+        v["abcut"] = 1  # 剪枝标记
+        return v
 ```
+
+
 
 ## 参考资料
 

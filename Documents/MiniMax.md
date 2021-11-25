@@ -35,13 +35,23 @@
 
 1. 根据给定深度进行遍历(图中仅仅遍历 5 层)
 
-   首先将父节点的 α、β 值传递到子节点中
+   首先将父节点的 α、β 值传递到叶子节点
+
+   ```python
+   negamax(board, candidates, role, i, MIN, MAX)
+   ```
 
    ![](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/12/202111121348693.jpg)
 
 2. 进行回溯，节点处于 Max 层，因此 α 变成 5
 
    ![](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/12/202111121352259.jpg)
+
+   ```python
+   if v["score"] > best["score"]:
+       best = v
+   # best在遍历子节点时选取分数最高f
+   ```
 
 3. 继续遍历兄弟树
 
@@ -68,6 +78,68 @@
 ## 代码实现
 
 ```python
+# minimax.py
+def r(board, deep, alpha, beta, role, step, steps):
+	# ...
 
+    # 获取当前j棋盘分数
+    _e = board.evaluate(role)
+
+    leaf = {"score": _e, "step": step, "steps": steps}
+
+    # 搜索到底(搜索范围：给定 depth ~ 0)或者已经胜利, 返回叶子节点
+    if (deep <= 0 or func.greatOrEqualThan(_e, S["FIVE"])
+            or func.littleOrEqualThan(_e, -S["FIVE"])):
+        return leaf
+
+    best = {"score": MIN, "step": step, "steps": steps}
+    
+    onlyThree = step > 1 if len(board.allSteps) > 10 else step > 3
+    points = board.gen(role, onlyThree)  # 启发式评估, 获取整个棋盘下一步可能获胜的节点
+    
+    # 如果没有节点, 即当前节点是树叶, 直接返回
+    if len(points) == 0:
+        return leaf
+
+    # 对可能获胜节点进行遍历
+    for item in points:
+        board.AIput(item["p"], role)  # 在可能获胜的节点上模拟落子
+        _deep = deep - 1  # 深度减一
+
+        _steps = steps.copy()  # 复制一下之前的步骤
+        _steps.append(item)  # 步骤增加当前遍历的节点
+
+        # 进行递归, 总步数加一
+        v = r(board, _deep, -beta, -alpha, func.reverse(role), step + 1, _steps)
+
+        # 下一步是对手, 对手分数越高, 代表自己分数越低, 所以分数取反
+        v["score"] = - v["score"]
+
+        board.AIremove(item["p"])  # 在棋盘上删除这个子(恢复原来的棋盘)
+        
+        if v["score"] > best["score"]:
+            best = v
+        
+     # ...
+
+    return best
 ```
 
+```python
+# minimax.py
+def negmax(..., alpha, beta, ...):
+    # 当前处于极大层(根节点), 对 candidates 里的落子点进行遍历
+    # 找到最优解(alpha最大的)
+    for item in candidates:
+        # 在棋盘上落子
+        board.AIput(item["p"], role)
+        # 注意, alpha/beta 交换了, 因为每一层的 alpha 或 beta 只有一个会变
+        # 但是递归时需要传那个不变的进去
+        v = r(board, deep - 1, -beta, -alpha, func.reverse(role), 1, [item])
+        v["score"] = -1 * v["score"]
+        alpha = max(alpha, v["score"])
+        # 从棋盘上移除这个子
+        board.AIremove(item["p"])
+        item["v"] = v
+    return alpha
+```
