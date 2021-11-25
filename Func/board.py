@@ -795,7 +795,7 @@ class AI_board(Board):
         else:
             twos = hum_twos + com_twos
 
-        twos.sort(key=lambda x: x["score"])
+        twos.sort(key=lambda x: x["score"], reverse=True)
 
         # 如果没有活二就下在附近...
         result.extend(twos if len(twos) else neighbors)
