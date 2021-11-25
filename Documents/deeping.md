@@ -26,8 +26,15 @@ def deeping(board, candidates, role, deep):
 
     candidates = list(map(rearrange, candidates))
 
-    # 先找到分数高的, 再找步骤少的
-    candidates.sort(key=lambda x: (x["score"], -x["step"]), reverse=True)
+    # 过滤出分数大于等于 0 的
+    c = list(filter(lambda x: x["score"] >= 0, candidates))
+    if len(c) == 0:
+        # 如果分数都不大于 0
+        # 找一个步骤最长的挣扎一下
+        candidates.sort(key=lambda x: x["step"], reverse=True)
+    else:
+        # 分数大于 0, 先找到分数高的, 分数一样再找步骤少的
+        candidates.sort(key=lambda x: (x["score"], -x["step"]), reverse=True)
 
     return candidates[0]
 ```
