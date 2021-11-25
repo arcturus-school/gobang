@@ -3,6 +3,7 @@
 '''
 
 from Func.constants import R, S, C
+from time import time
 import AI.func as func
 
 # 正负无穷
@@ -16,7 +17,7 @@ cacheCount = 0  # zobrist 缓存节点数
 cacheGet = 0  # zobrist 缓存命中数量
 
 
-def r(board, deep, alpha, beta, role, step, steps, spread):
+def r(board, deep, alpha, beta, role, step, steps):
     '''
     :param {int} deep: 搜索深度
     :param {} alpha:
@@ -28,6 +29,7 @@ def r(board, deep, alpha, beta, role, step, steps, spread):
     :return {dist} leaf/best:
     '''
     global cacheGet, count, ABcut
+
     # 开启缓存
     if C["cache"]:
         # 获取缓存中与 zobrist 散列键值相同的缓存数据
@@ -54,15 +56,14 @@ def r(board, deep, alpha, beta, role, step, steps, spread):
                         "step": step + c["score"]["step"]
                     }
 
-    # 评估函数
+    # 获取当前棋盘分数
     _e = board.evaluate(role)
 
     leaf = {"score": _e, "step": step, "steps": steps}
 
     count += 1  # 思考节点数加一
 
-    # 搜索到底或者已经胜利
-    # 注意这里是小于 0, 而不是 1
+    # 搜索到底(搜索范围 self.depth ~ 0)或者已经胜利
     # 因为本次直接返回结果并没有下一步棋
     if (deep <= 0 or func.greatOrEqualThan(_e, S["FIVE"])
             or func.littleOrEqualThan(_e, -S["FIVE"])):
@@ -70,33 +71,27 @@ def r(board, deep, alpha, beta, role, step, steps, spread):
 
     best = {"score": MIN, "step": step, "steps": steps}
 
-    # 获取需要评分的节点
-    points = board.gen(role)
+    onlyThree = step > 1 if len(board.allSteps) > 10 else step > 3
+    points = board.gen(role, onlyThree)  # 启发式评估, 获取整个棋盘下一步可能获胜的节点
 
-    # 如果没有需要评分的节点, 即当前节点是树叶, 直接返回
+    # 如果没有节点, 即当前节点是树叶, 直接返回
     if len(points) == 0:
         return leaf
 
     # 对需要评分的子节点进行循环遍历
     for item in points:
-        board.AIput(item["p"], role)  # 在可能获胜的节点上落子
+        board.AIput(item["p"], role)  # 在可能获胜的节点上模拟落子
         _deep = deep - 1
-        _spread = spread
 
-        # if _spread < C["spreadLimit"]:
-        #     #  冲四延伸
-        #     if (role == R["com"] and item.get("scoreHum") >= S["FIVE"]) or (
-        #             role == R["hum"] and item.get("scoreCom") >= S["FIVE"]):
-        #         _deep += 2
-        #         _spread += 1
+        _steps = steps.copy()  # 复制一下之前的步骤
+        _steps.append(item)  # 步骤增加当前遍历的节点
 
-        _steps = steps.copy()
-        _steps.append(item)
-
-        # 进行递归
+        # 进行递归, 总步数加一
         v = r(board, _deep, -beta, -alpha, func.reverse(role), step + 1,
-              _steps, _spread)
-        v["score"] = -1 * v["score"]
+              _steps)
+
+        # 下一步是对手, 对手分数越高, 代表自己分数越低, 所以分数取反
+        v["score"] = -v["score"]
 
         board.AIremove(item["p"])  # 在棋盘上删除这个子
 
@@ -107,7 +102,8 @@ def r(board, deep, alpha, beta, role, step, steps, spread):
         # 将 alpha 值与子节点分数做比较, 选出最大的分数给 alpha
         alpha = max(best["score"], alpha)
         # alpha-beta 剪枝
-        if func.greatOrEqualThan(v["score"], beta):
+        # if func.greatOrEqualThan(v["score"], beta):
+        if func.greatOrEqualThan(alpha, beta):
             ABcut += 1  # 剪枝数加一
             v["score"] = MAX - 1  # 被剪枝的用极大值来记录, 但是必须比 MAX 小
             v["abcut"] = 1  # 剪枝标记
@@ -122,7 +118,6 @@ def cache(board, deep, score):
     '''
     分数缓存
     '''
-    global cacheCount
     if not C["cache"]:
         # 不开启缓存
         return
@@ -140,7 +135,7 @@ def cache(board, deep, score):
     }
 
     global cacheCount
-    cacheCount += 1
+    cacheCount += 1  # 缓存数加一
 
 
 def negamax(board, candidates, role, deep, alpha, beta):
@@ -162,7 +157,9 @@ def negamax(board, candidates, role, deep, alpha, beta):
     for item in candidates:
         # 在棋盘上落子
         board.AIput(item["p"], role)
-        v = r(board, deep - 1, -beta, -alpha, func.reverse(role), 1, [item], 0)
+        # 注意, alpha/beta 交换了, 因为每一层的 alpha 或 beta 只有一个会变
+        # 但是递归时需要传那个不变的进去
+        v = r(board, deep - 1, -beta, -alpha, func.reverse(role), 1, [item])
         v["score"] = -1 * v["score"]
         alpha = max(alpha, v["score"])
         # 从棋盘上移除这个子
@@ -171,6 +168,23 @@ def negamax(board, candidates, role, deep, alpha, beta):
     return alpha
 
 
+def print_Info(func):
+    '''展示运算情况'''
+    def inner(*arg):
+        start = time()
+        p = func(*arg)
+        end = time()
+        print("=".center(40, "="))
+        print(f"本次计算耗时{end-start}s")
+        print(f"位置分数{p['score']}, 步数{p['step']}")
+        print(f"搜索节点数{count}, AB剪枝数{ABcut}")
+        print(f"搜索缓存数{cacheCount}, 命中数{cacheGet}")
+        return p
+
+    return inner
+
+
+@print_Info
 def deeping(board, candidates, role, deep):
     '''
     迭代加深
@@ -183,8 +197,6 @@ def deeping(board, candidates, role, deep):
     :param {int} deep: 搜索深度
     :return {list} 落子坐标
     '''
-    global Cache
-    Cache = {}
 
     # 每次仅尝试偶数层
     for i in range(2, deep, 2):
@@ -226,15 +238,20 @@ def deeping(board, candidates, role, deep):
 
     candidates = list(map(rearrange, candidates))
 
-    # 先找到分数高的, 在找步骤少的
-    candidates.sort(key=lambda x: (x["score"], -x["step"]), reverse=True)
+    # 过滤出分数大于等于 0 的
+    c = list(filter(lambda x: x["score"] >= 0, candidates))
+    if len(c) == 0:
+        # 如果分数都不大于 0
+        # 找一个步骤最长的挣扎一下
+        candidates.sort(key=lambda x: x["step"], reverse=True)
+    else:
+        # 分数大于 0, 先找到分数高的, 分数一样再找步骤少的
+        candidates.sort(key=lambda x: (x["score"], -x["step"]), reverse=True)
 
-    result = candidates[0]["p"]
-
-    return result
+    return candidates[0]
 
 
 def deepAll(board, deep, role=R["rival"]):
     # 获取启发式搜索返回的优先搜搜列表
-    candidates = board.gen(role)
-    return deeping(board, candidates, role, deep)
+    candidates = board.gen(role, len(board.allSteps) > 10)
+    return deeping(board, candidates, role, deep)["p"]
