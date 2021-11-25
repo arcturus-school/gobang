@@ -19,10 +19,10 @@ S = {
     "FIVE": 10000000,  # 连五
 
     # 当一侧被封死
-    "BLOCKED_ONE": 1,  # 死一
-    "BLOCKED_TWO": 10,  # 死二
-    "BLOCKED_THREE": 100,  # 死三
-    "BLOCKED_FOUR": 10000  # 死四
+    "BLOCKED_ONE": 1,  # 眠一
+    "BLOCKED_TWO": 10,  # 眠二
+    "BLOCKED_THREE": 100,  # 眠三
+    "BLOCKED_FOUR": 10000  # 眠四
 }
 
 #########################
@@ -35,8 +35,5 @@ threshold = 1.15
 #########################
 C = {
     "countLimit": 20,  # gen 函数返回的节点数量上限
-    "onlyThrees": False,  # 只考虑分数大于活三
-    # 提升搜索速度
-    "spreadLimit": 1,  # 单步延伸, 长度限制
     "cache": True
 }
