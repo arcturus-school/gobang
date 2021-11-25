@@ -296,8 +296,8 @@ class Oneself_board(Board):
         # 菜单栏
         m = {
             "文件": {
-                "保存": save,
-                "导入": import_,
+                "保存": lambda: save(self.allSteps),
+                "导入": lambda: import_(self),
                 "退出": lambda: self.quit(root, HOME)
             },
             "帮助": {
@@ -591,14 +591,15 @@ class AI_board(Board):
         # 菜单栏
         m = {
             "文件": {
-                "保存": save,
-                "导入": import_,
+                "保存": lambda: save(self.allSteps, self._first),
+                "导入": lambda: import_(self),
                 "退出": lambda: self.quit(root, HOME)
             },
             "帮助": {
                 "关于": about
             }
         }
+
         menu(root, m)
         windowStyle(root, "人机对战")
 
