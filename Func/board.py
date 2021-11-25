@@ -461,8 +461,9 @@ class AI_board(Board):
         self._zobrist = Zobrist()  # 初始化 zobrist 散列对象
         self._depth = depth  # 搜索深度
         self._first = first  # 是否先手
+        self.currentSteps = []  # AI 模拟落子的步骤, 区别与棋盘的 allsteps
 
-        # 存储双方得分数组
+        # 存储双方得分数组, 与棋盘大小、维数一致
         self.comScore = np.zeros([m, n], dtype=int)
         self.humScore = np.zeros([m, n], dtype=int)
 
@@ -480,7 +481,7 @@ class AI_board(Board):
                     mylist.append(np.zeros([m, n], dtype=int))
                 self.scoreCache.append(mylist)
 
-        # 当前局势打分
+        # 初始化分数
         self.initScore()
 
     def sidebar(self, w, undo, quit, resume, forward):
@@ -655,10 +656,10 @@ class AI_board(Board):
         # 邻居数没有超过给定数目,返回 False
         return False
 
-    def gen(self, role):
+    def gen(self, role, onlyThrees):
         '''
         启发式评估函数
-        对某个空位进行评分, 判断是否能够成五、活四等等
+        对整个棋盘空位进行评分, 判断是否能够成五、活四等等
         优先对这些可能会获胜的点进行递归, 能够提高搜索速度/剪枝效率
         注意区别于 evaluate.py(对四个方向进行评分)
         :param {int} role
@@ -670,15 +671,15 @@ class AI_board(Board):
         fives = []  # 连五
         com_fours = []  # AI 活四
         hum_fours = []  # 玩家活四
-        com_blocked_fours = []  # AI 死四
-        hum_blocked_fours = []  # 玩家死四
+        com_blocked_fours = []  # AI 眠四
+        hum_blocked_fours = []  # 玩家眠四
         com_double_threes = []  # AI 双三
         hum_double_threes = []  # 玩家双三
         com_threes = []  # AI 活三
         hum_threes = []  # 玩家活三
         com_twos = []  # AI 活二
         hum_twos = []  # 玩家活二
-        neighbors = []
+        neighbors = []  # 附近点
 
         board = self._board
 
@@ -688,33 +689,23 @@ class AI_board(Board):
                     if len(self.allSteps) < 6:
                         if not self.hasNeighbor(i, j, 1, 1):
                             # 以 [i, j] 为中心的边长为 3 格的方形范围内
-                            # 不存在 1 个己方棋子
-                            # 后面代码不用考虑了
+                            # 不存在棋子, 不用考虑这个点了
                             continue
-                        elif not self.hasNeighbor(i, j, 2, 2):
-                            # 如果以 [i, j] 为中心的边长为 3 格的方形范围内
-                            # 存在 1 个己方棋子, 则扩大搜索范围
-                            # 以 [i, j] 为中心的边长为 5 格的方形范围内
-                            # 不存在 2 个己方棋子, 后面代码也不用考虑了
-                            continue
+                    elif not self.hasNeighbor(i, j, 2, 2):
+                        continue
 
                     scoreHum = self.humScore[i, j]
                     scoreCom = self.comScore[i, j]
                     # 比较 (i,j) 位置 AI 和人谁的评分更高
                     maxScore = max(scoreCom, scoreHum)
 
-                    # 若只考虑大于等于活三的情况
-                    # 并且分数还低于活三的, 直接跳过
-                    if C["onlyThrees"] and maxScore < S["THREE"]:
+                    if onlyThrees and maxScore < S["THREE"]:
                         continue
 
                     p = {"p": [i, j], "score": maxScore}
 
-                    if scoreCom >= S["FIVE"]:
-                        # 先看 AI 能不能“连五”
-                        fives.append(p)
-                    elif scoreHum >= S["FIVE"]:
-                        # 再看玩家能不能“连五”
+                    if scoreCom >= S["FIVE"] or scoreHum >= S["FIVE"]:
+                        # 先看 AI 能不能“连五”, 再看玩家能不能“连五”
                         fives.append(p)
                     elif scoreCom >= S["FOUR"]:
                         # AI 有没有活四
@@ -723,10 +714,10 @@ class AI_board(Board):
                         # 玩家有没有活四
                         hum_fours.append(p)
                     elif scoreCom >= S["BLOCKED_FOUR"]:
-                        # AI 有没有死四
+                        # AI 有没有眠四
                         com_blocked_fours.append(p)
                     elif scoreHum >= S["BLOCKED_FOUR"]:
-                        # 玩家有没有死四
+                        # 玩家有没有眠四
                         hum_blocked_fours.append(p)
                     elif scoreCom >= 2 * S["THREE"]:
                         # AI 有没有双三
@@ -780,7 +771,7 @@ class AI_board(Board):
         if len(fours):
             return fours + blockedfours
 
-        # 双三/活三/死三等情况
+        # 双三/活三/眠三等情况
         result = []
         if role == R["rival"]:
             result = (com_double_threes + hum_double_threes +
@@ -794,11 +785,11 @@ class AI_board(Board):
         if len(com_double_threes) or len(hum_double_threes):
             return result
 
-        # 只考虑大于等于活三的情况
-        if C["onlyThrees"]:
+        # 如果只考虑双三的话...
+        if onlyThrees:
             return result
 
-        # 还考虑活二等情况
+        # 有活二等情况
         if role == R["rival"]:
             twos = com_twos + hum_twos
         else:
@@ -822,8 +813,8 @@ class AI_board(Board):
         :param {int} role
         :return {int} result: 分数
         '''
-        self.comMaxScore = 0
-        self.humMaxScore = 0
+        comMaxScore = 0
+        humMaxScore = 0
 
         board = self._board
 
@@ -832,18 +823,18 @@ class AI_board(Board):
             for j, item_ in enumerate(item):
                 # 累加 AI 或人的每一个位置的分数
                 if item_ == R["rival"]:
-                    self.comMaxScore += self.fixScore(self.comScore[i, j])
+                    comMaxScore += self.fixScore(self.comScore[i, j])
                 elif item_ == R["oneself"]:
-                    self.humMaxScore += self.fixScore(self.humScore[i, j])
+                    humMaxScore += self.fixScore(self.humScore[i, j])
 
         neg = 1 if role == R["rival"] else -1
         '''
-            如果估分对象是 AI,且 self.comMaxScore - self.humMaxScore < 0
-            AI 分数低,result 是负数,说明该棋面对 AI 不利
-            如果估分对象是对手,且 self.comMaxScore - self.humMaxScore < 0
-            AI 分数低,result 是正数,说明棋面对人有利
-            '''
-        result = neg * (self.comMaxScore - self.humMaxScore)
+        如果估分对象是 AI,且 comMaxScore - humMaxScore < 0
+        AI 分数低, result 是负数, 说明该棋面对 AI 不利
+        如果估分对象是对手,且 comMaxScore - humMaxScore < 0
+        AI 分数低, result 是正数, 说明棋面对人有利
+        '''
+        result = neg * (comMaxScore - humMaxScore)
         return result
 
     def fixScore(self, score):
@@ -852,19 +843,19 @@ class AI_board(Board):
         :param {int} score: 分数
         :return {int} score: 修正后的分数
         '''
-        # 如果分数在活四和死四之间(10000~100000)
+        # 如果分数在活四和眠四之间(10000~100000)
         if score < S["FOUR"] and score >= S["BLOCKED_FOUR"]:
-            # 如果分数小于死四与活三之和(10000~11000)
+            # 如果分数小于眠四与活三之和(10000~11000)
             if score < S["BLOCKED_FOUR"] + S["THREE"]:
                 # 降低 AI 冲四行为(通过降低其评分至与活三一致)
                 # 冲四局面: 再下一个子就能连五了
                 return S["THREE"]
             elif score < S["BLOCKED_FOUR"] * 2:
-                # 如果分数小于死四分数的两倍
-                # 升高其分数,使其冲四活三
+                # 如果分数小于眠四分数的两倍(11000~20000)
+                # 升高其分数, 使其冲四
                 return S["FOUR"]
             else:
-                # 双冲四
+                # 双冲四(20000~100000)
                 return S["FOUR"] * 2
         return score
 
@@ -873,10 +864,11 @@ class AI_board(Board):
         更新一个位置的分数
         :param {list} p: 需要更新分数的位置的坐标
         '''
-        radius = 4
-        # 棋盘维度 n × m
-        n = self._board.shape[0]
-        m = self._board.shape[1]
+        # 更新范围
+        radius = self._num - 1
+        # 棋盘维度 m × n
+        m = self.m
+        n = self.n
         # 坐标
         x = p[0]
         y = p[1]
@@ -903,14 +895,13 @@ class AI_board(Board):
                 # 如果是 AI,玩家分数为 0
                 self.humScore[x, y] = 0
 
-        # 无论是不是空位, 都需要更新
         # 横向 ——
         for i in range(-radius, radius + 1):
             x_ = x
             y_ = y + i
             if y_ < 0:
                 continue
-            if y_ >= m:
+            if y_ >= n:
                 break
             update(x_, y_, 0)
 
@@ -920,7 +911,7 @@ class AI_board(Board):
             y_ = y
             if x_ < 0:
                 continue
-            if x_ >= n:
+            if x_ >= m:
                 break
             update(x_, y_, 1)
 
@@ -930,7 +921,7 @@ class AI_board(Board):
             y_ = y + i
             if x_ < 0 or y_ < 0:
                 continue
-            if x_ >= n or y_ >= m:
+            if x_ >= m or y_ >= n:
                 break
             update(x_, y_, 2)
 
@@ -938,9 +929,9 @@ class AI_board(Board):
         for i in range(-radius, radius + 1):
             x_ = x + i
             y_ = y - i
-            if x_ < 0 or y_ >= m:
+            if x_ < 0 or y_ >= n:
                 continue
-            if x_ >= n or y_ < 0:
+            if x_ >= m or y_ < 0:
                 continue
             update(x_, y_, 3)
 
@@ -964,7 +955,7 @@ class AI_board(Board):
                     self.comScore[i, j] = scorePoint(self, i, j, R["rival"])
                     self.humScore[i, j] = 0
                 elif item_ == R["oneself"]:
-                    # 对玩家打分,AI 分数为 0
+                    # 对玩家打分, AI 分数为 0
                     self.humScore[i, j] = scorePoint(self, i, j, R["oneself"])
                     self.comScore[i, j] = 0
 

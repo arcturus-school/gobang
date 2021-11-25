@@ -1,4 +1,4 @@
-<div align="center"><h1>五子棋小游戏</h1></div>
+<div align="center"><h1>五子棋小游戏-tkinter版</h1></div>
 
 > 作为软件概论大作业的仓库...
 
@@ -10,19 +10,19 @@
 - [x] 悔棋
 - [x] 先后手
 - [x] 重新开始
-- [ ] 导出/导入棋盘(想着把步骤列表导出就行了...应该不难)
+- [ ] 导出/导入棋盘
 
-# 二、工作量情况
+# 二、工作量
 
 /(ㄒoㄒ)/~~ 左右互博和局域网联机做了我快一个星期，一开始用的 pygame，感觉按钮啊提示框啥的都要自己实现，有点儿麻烦，所以改用 tkinter了，没想到这个也挺麻烦的，网上的教程也很少，然后看了一个星期的 AI，没看懂，后面再说吧
 
-# 三、实验步骤与方法
+# 三、步骤与方法
 
 1. 打开 github，看看有没有人实现
 2. 有人实现了，说明可行，埋头写代码....
 3. 遇到 error，打开浏览器，搜索问题，找不到，埋头调试
 
-# 四、实验结果
+# 四、结果
 
 1. 首页
 
@@ -54,13 +54,29 @@
 
    ![image-20211120204936123](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/20/202111202049247.png)
 
-5. 
+5. 人机模式
 
-# 五、实验总结
+   ![image-20211125094341054](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/25/202111250943169.png)
+
+# 五、总结
 
 大作业害人不浅 (╯°□°）╯︵ ┻━┻
 
+# 其他说明
+
+1. evaluate.py 需要 python >= 3.10.0, 因为使用了 match/case
+2. 需要 numpy
+3. AI 部分移植[gobang](https://github.com/lihongxun945/gobang.git), 并做了一些删减, 不是因为原作不行, 而是我看不懂
+
 # 附录
+
+1. [引言](Documents/Game-Tree.md)
+2. [评分函数](Documents/evaluate.md)
+3. [极大极小值搜索](Documents/MiniMax.md)
+4. [alpha-beta剪枝](Documents/Alpha-Beta.md)
+5. [Zobrist散列](Documents/Zobrist.md)
+6. [启发式搜索](Documents/Heuristic.md)
+7. [迭代加深](Documents/deeping.md)
 
 # 参考资料
 
@@ -70,7 +86,6 @@
 
 > 除了 AI 有参考资料，其他的都太零碎了，面向百度编程，也没什么好引用的...
 >
-> 做到后面越做越烦，所以写的代码越来越烂了 o(TヘTo) (虽然本来也不怎么样...)
 
 
 
