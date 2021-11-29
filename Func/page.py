@@ -3,6 +3,7 @@ from tkinter.constants import TOP
 from Func.board import Oneself_board, AI_board
 from Func.client import Client
 from Func.page_style import windowStyle
+from Func.get_ip import getIPv4
 import tkinter.ttk as ttk
 
 
@@ -110,7 +111,7 @@ def play_online(h):
     h.destroy()
 
     # 开启客户端
-    client = Client("10.22.164.18", 50007)
+    client = Client(getIPv4(), 50007)
     client.invite_window(HOME)
 
 

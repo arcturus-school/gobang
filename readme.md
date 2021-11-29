@@ -32,8 +32,7 @@
 
 4. 网络联机
 
-   > 需要运行 server.py
-   > 需要将 server.py 与 Func/page.py->play_online 里的 IP 改成自己的局域网
+   > 需要先运行 server.py
 
    ![image-20211120204526316](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/20/202111202045433.png)
 
@@ -80,6 +79,3 @@
 2. [如何设计一个还可以的五子棋AI](https://kimlongli.github.io/2016/12/14/如何设计一个还可以的五子棋AI/)
 
 > 除了 AI 有参考资料，其他的都太零碎了，面向百度编程，也没什么好引用的...
-
-
-

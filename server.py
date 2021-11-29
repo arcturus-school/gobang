@@ -2,6 +2,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
 from time import strftime, localtime
 from Func.json_byte import json_to_byte, byte_to_json
+from Func.get_ip import getIPv4
 
 
 # 服务器
@@ -169,5 +170,5 @@ class server:
             conn.send(onlinePeople)
 
 
-s = server("10.22.164.18", 50007)
+s = server(getIPv4(), 50007)
 s.start()
