@@ -276,13 +276,14 @@ class Client:
             self.onlineList.insert('end', "服务器连接超时...")
             self.btn1['state'] = "disable"  # 连接服务器超时则禁止邀请
 
+        self.net.protocol("WM_DELETE_WINDOW", quit)
         self.net.mainloop()
 
     def vs_window(self, HOME):
         '''
         对战窗口
         '''
-        self.net.title('五子棋')
+        self.net.title(f"{self.myIP}:{self.myPort}")
 
         s = ttk.Style()
         s.configure('TFrame', background="#e6e6e6")
