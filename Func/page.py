@@ -1,4 +1,4 @@
-from tkinter import Tk, PhotoImage
+from tkinter import Tk, PhotoImage, IntVar
 from tkinter.constants import TOP
 from Func.board import Oneself_board, AI_board
 from Func.client import Client
@@ -120,6 +120,39 @@ def amuse_oneself(h):
     普通模式, 左右手互搏
     '''
     h.destroy()
-    # 新建一个棋盘对象
-    b = Oneself_board(15, 15, 5)
-    b.start(HOME)
+    selected = Tk()
+    windowStyle(selected, "选择棋盘")
+    list = tuple([i for i in range(9, 20)])
+
+    ttk.Label(selected, text="行").grid(pady=5)
+    r = IntVar()
+    row = ttk.Combobox(selected, textvariable=r)
+    row.state(["readonly"])
+    row['values'] = list
+    row.set(9)
+    row.grid(row=1, column=0, padx=10, pady=20)
+
+    ttk.Label(selected, text="列").grid(row=0, column=1, pady=5)
+    c = IntVar()
+    col = ttk.Combobox(selected, textvariable=c)
+    col.state(["readonly"])
+    col['values'] = list
+    col.set(9)
+    col.grid(row=1, column=1, padx=10, pady=20)
+
+    def start():
+        selected.destroy()
+        # 新建一个棋盘对象
+        b = Oneself_board(r.get(), c.get(), 5)
+        b.start(HOME)
+
+    button = ttk.Button(selected, text='开始游戏', command=start)
+    button.grid(row=2, column=0, columnspan=2, pady=20)
+
+    def quit():
+        selected.destroy()
+        HOME()
+
+    # 监听窗口关闭事件
+    selected.protocol("WM_DELETE_WINDOW", quit)
+    selected.mainloop()

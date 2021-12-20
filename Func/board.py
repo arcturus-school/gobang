@@ -216,6 +216,9 @@ class Board:
 
 
 class Oneself_board(Board):
+    def __init__(self, m, n, num):
+        super().__init__(m, n, num)
+        self._first = False
     '''
     左右手互博
     '''
@@ -458,7 +461,7 @@ class AI_board(Board):
         '''
         super().__init__(m, n, num)
 
-        self._zobrist = Zobrist()  # 初始化 zobrist 散列对象
+        self._zobrist = Zobrist(m, n)  # 初始化 zobrist 散列对象
         self._depth = depth  # 搜索深度
         self._first = first  # 是否先手
         self.currentSteps = []  # AI 模拟落子的步骤, 区别与棋盘的 allsteps
