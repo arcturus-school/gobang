@@ -219,9 +219,11 @@ class Oneself_board(Board):
     def __init__(self, m, n, num):
         super().__init__(m, n, num)
         self._first = False
+
     '''
     左右手互博
     '''
+
     def undo(self):
         '''
         悔棋
@@ -617,7 +619,7 @@ class AI_board(Board):
 
         if not self._first:
             # 电脑先手, 下在中间
-            self.put([7, 7], self.who)
+            self.put([self.m // 2, self.n // 2], self.who)
 
         root.protocol("WM_DELETE_WINDOW", lambda: self.quit(root, HOME))
         root.mainloop()
