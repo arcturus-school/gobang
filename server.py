@@ -25,6 +25,7 @@ class server:
         s.listen()
 
         print("服务器启动...")
+        print(f"服务器IP:{self.HOST},端口号:{self.PORT}")
         while True:
             conn, addr = s.accept()
             self.online.append(conn)  # 保存已建立连接 conn 对象

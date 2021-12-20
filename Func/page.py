@@ -1,18 +1,22 @@
-from tkinter import Tk, PhotoImage, IntVar
+from tkinter import Tk, PhotoImage, IntVar, StringVar, messagebox
 from tkinter.constants import TOP
 from Func.board import Oneself_board, AI_board
 from Func.client import Client
 from Func.page_style import windowStyle
 from Func.get_ip import getIPv4
 import tkinter.ttk as ttk
+from re import compile
 
 
 def select(board, depth=0, role=0):
+    '''
+    选择棋盘大小
+    '''
     selected = Tk()
     windowStyle(selected, "选择棋盘")
     list = tuple([i for i in range(9, 20)])
 
-    ttk.Label(selected, text="行").grid(pady=5)
+    ttk.Label(selected, text="行", background="#e6e6e6").grid(pady=5)
     r = IntVar()
     row = ttk.Combobox(selected, textvariable=r)
     row.state(["readonly"])
@@ -20,7 +24,9 @@ def select(board, depth=0, role=0):
     row.set(9)
     row.grid(row=1, column=0, padx=10, pady=20)
 
-    ttk.Label(selected, text="列").grid(row=0, column=1, pady=5)
+    ttk.Label(selected, text="列", background="#e6e6e6").grid(row=0,
+                                                             column=1,
+                                                             pady=5)
     c = IntVar()
     col = ttk.Combobox(selected, textvariable=c)
     col.state(["readonly"])
@@ -150,10 +156,40 @@ def play_online(h):
     网络联机
     '''
     h.destroy()
+    input_ip = Tk()
+    windowStyle(input_ip, "服务器地址")
 
-    # 开启客户端
-    client = Client(getIPv4(), 50007)
-    client.invite_window(HOME)
+    ttk.Label(input_ip, text="服务器IP地址", background="#e6e6e6").grid(pady=5,
+                                                                   padx=10)
+
+    server_ip = StringVar()
+    ip = ttk.Entry(input_ip, textvariable=server_ip, width=30)
+    ip.insert(0, getIPv4())  # 插入默认值
+    ip.grid(row=1, padx=10)
+
+    def connect():
+        r = r"25[0-5]|2[0-4]\d|[0-1]\d{2}|[1-9]?\d"
+        RegEx = compile(f"^({r}).({r}).({r}).({r})$")
+        ip_ = ip.get()
+
+        if RegEx.search(ip_):
+            # 开启客户端
+            input_ip.destroy()
+            client = Client(ip_, 50007)
+            client.invite_window(HOME)
+        else:
+            messagebox.showinfo(title='(╯°□°）╯', message='输个对的IP啊')
+
+    button = ttk.Button(input_ip, text='连接', command=connect)
+    button.grid(row=2, pady=20)
+
+    def quit():
+        input_ip.destroy()
+        HOME()
+
+    # 监听窗口关闭事件
+    input_ip.protocol("WM_DELETE_WINDOW", quit)
+    input_ip.mainloop()
 
 
 def amuse_oneself(h):
