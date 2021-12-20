@@ -8,7 +8,7 @@ import tkinter.ttk as ttk
 from re import compile
 
 
-def select(board, depth=0, role=0):
+def select(board, depth=None, role=None):
     '''
     选择棋盘大小
     '''
@@ -37,7 +37,8 @@ def select(board, depth=0, role=0):
     def start():
         selected.destroy()
         # 新建一个棋盘对象
-        if depth and role == 0:
+        print(depth, role)
+        if depth and role is not None:
             b = board(r.get(), c.get(), 5, depth, role)
         else:
             b = board(r.get(), c.get(), 5)
