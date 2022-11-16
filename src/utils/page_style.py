@@ -1,12 +1,15 @@
-from tkinter import Menu
+from tkinter import Menu, Tk
 import webbrowser
 import ctypes
 
 
-def windowStyle(w, title="五子棋", bg="#e6e6e6", ico="src/favicon.ico"):
-    '''
-    设置窗口样式
-    '''
+# 设置窗口样式
+def windowStyle(
+    w: Tk,
+    title="五子棋",
+    bg="#e6e6e6",
+    ico="src/assets/favicon.ico",
+):
     # 标题
     w.title(title)
 
@@ -23,13 +26,11 @@ def windowStyle(w, title="五子棋", bg="#e6e6e6", ico="src/favicon.ico"):
     ScaleFactor = ctypes.windll.shcore.GetScaleFactorForDevice(0)
 
     # 设置缩放因子
-    w.tk.call('tk', 'scaling', ScaleFactor / 75)
+    w.tk.call("tk", "scaling", ScaleFactor / 75)
 
 
-def menu(w, m):
-    '''
-    顶部菜单栏
-    '''
+# 顶部菜单栏
+def menu(w: Tk, m: dict):
     menubar = Menu(w)
     for i in m.items():
         a = Menu(menubar, tearoff=0)
@@ -37,11 +38,9 @@ def menu(w, m):
             a.add_command(label=j[0], command=j[1])
         menubar.add_cascade(label=i[0], menu=a)
 
-    w['menu'] = menubar
+    w["menu"] = menubar
 
 
+# 打开浏览器
 def about():
-    '''
-    打开浏览器
-    '''
     webbrowser.open("https://github.com/ICE99125/gobang.git")

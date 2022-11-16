@@ -1,7 +1,7 @@
-'''
+"""
 Zobrist 哈希算法, 对重复棋盘的优化
-'''
-from Func.constants import R
+"""
+from ..constants import R
 import numpy as np
 import secrets
 
@@ -22,20 +22,19 @@ class Zobrist:
             y[...] = self._rand()
 
     def _rand(self, k=31):
-        '''
+        """
         生成 k 位随机数(k<=31)
         :param {int} k: 随机数位数
         :return {int} k 位随机数
-        '''
+        """
         return secrets.randbits(k)
 
-    def go(self, x, y, role):
-        '''
-        :param {int} x: 行坐标
-        :param {int} y: 列坐标
-        :param {int} role: AI or 玩家
-        :return {int} code: 新的 Zobrist 哈希值
-        '''
+    def go(self, x: int, y: int, role: int):
+        """
+        x: 行坐标
+        y: 列坐标
+        role: AI or 玩家
+        """
         # 判断本次操作是 AI 还是人, 并返回相应位置的随机数
         code = self._com[x, y] if role == R["rival"] else self._hum[x, y]
         # 当前键值异或位置随机数

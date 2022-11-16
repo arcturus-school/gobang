@@ -1,16 +1,14 @@
 from socket import socket, AF_INET, SOCK_DGRAM
 
 
-def getIPv4():
-    '''
-    获取本机 IPv4 地址
-    '''
+# 获取本机 IPv4 地址
+def getIPv4() -> str:
     try:
         s = socket(AF_INET, SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
-        ip = s.getsockname()[0]
+        s.connect(("8.8.8.8", 80))
+        ip, _ = s.getsockname()
     except Exception as e:
-        print(e)
+        print(f"获取本机 IP 地址出错, {e}")
     finally:
         s.close()
         return ip

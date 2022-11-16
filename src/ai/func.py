@@ -1,17 +1,17 @@
-'''
+"""
 一些必要的功能
-'''
-from Func.constants import S, threshold
+"""
+from ..constants import S, threshold
 import math
 
 
 # 角色互换
-def reverse(r):
+def reverse(r: int):
     return 2 if r == 1 else 1
 
 
 # 等于
-def equal(a, b):
+def equal(a: int, b: int):
     b = b or 0.01
     if b >= 0:
         return a >= b / threshold and a <= b * threshold
@@ -20,7 +20,7 @@ def equal(a, b):
 
 
 # 大于
-def greatThan(a, b):
+def greatThan(a: int, b: int):
     if b >= 0:
         return a >= (b + 0.1) * threshold
     else:
@@ -28,12 +28,12 @@ def greatThan(a, b):
 
 
 # 大于等于
-def greatOrEqualThan(a, b):
+def greatOrEqualThan(a: int, b: int):
     return equal(a, b) or greatThan(a, b)
 
 
 # 小于
-def littleThan(a, b):
+def littleThan(a: int, b: int):
     if b >= 0:
         return a <= (b - 0.1) / threshold
     else:
@@ -41,12 +41,12 @@ def littleThan(a, b):
 
 
 # 小于等于
-def littleOrEqualThan(a, b):
+def littleOrEqualThan(a: int, b: int):
     return equal(a, b) or littleThan(a, b)
 
 
 # “四舍五入”
-def round(score):
+def round(score: int):
     neg = -1 if score < 0 else 1
     abs = math.abs(score)
     if abs <= S["ONE"] / 2:
