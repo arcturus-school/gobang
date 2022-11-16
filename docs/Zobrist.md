@@ -2,7 +2,7 @@
 
 ## 基本过程
 
-![image-20211125134656623](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/25/202111251346688.png)
+![](assets/202111251346688.png)
 
 不同的走法最终达到的局势相同, 则可以重复利用缓存中原来计算过的结果
 

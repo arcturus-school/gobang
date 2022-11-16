@@ -20,47 +20,55 @@
 
 1. 首页
 
-   [![IOnmWQ.png](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/20/202111202038958.png)](https://imgtu.com/i/IOnmWQ)
+   ![](docs/assets/202111202038959.png)
 
 2. 本地开局
 
-   ![image-20211120203959534](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/20/202111202039662.png)
+   ![](docs/assets/202111202039662.png)
 
 3. 获胜界面
 
-   ![image-20211120204335290](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/20/202111202043419.png)
+   ![](docs/assets/202111202043419.png)
 
 4. 网络联机
 
    > 需要先运行 server.py
 
-   ![image-20211120204526316](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/20/202111202045433.png)
+   ![](docs/assets/202111202045433.png)
 
    询问是否接受对战邀请
 
-   ![image-20211120204623099](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/20/202111202046217.png)
+   ![](docs/assets/202111202046217.png)
 
    可边下棋边聊天
 
-   ![image-20211120204824601](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/20/202111202048721.png)
+   ![](docs/assets/202111202048721.png)
 
    可拒绝/接受对方悔棋
 
-   ![image-20211120204936123](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/20/202111202049247.png)
+   ![](docs/assets/202111202049247.png)
 
 5. 人机模式
 
-   ![image-20211125094341054](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/25/202111250943169.png)
+   ![](docs/assets/202111250943169.png)
 
 # 五、总结
 
 大作业害人不浅 (╯°□°）╯︵ ┻━┻
 
-# 其他说明
+# 六、本地开发
 
-1. evaluate.py 需要 python >= 3.10.0, 因为使用了 match/case
-2. 需要 numpy
-3. AI 部分移植[gobang](https://github.com/lihongxun945/gobang.git), 并做了一些删减, 不是因为原作不行, 而是我看不懂
+```bash
+pip install virtualenv
+```
+
+```bash
+virtualenv venv
+```
+
+```bash
+pip install -r requirements.txt
+```
 
 # 附录
 
