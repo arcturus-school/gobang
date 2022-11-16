@@ -59,21 +59,21 @@
 
    > 由于该兄弟节点的评分较小，回溯时不会改变 Max 层的 α 值
 
-   ![](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/12/202111121358688.jpg)
+   ![](assets/202111121358688.jpg)
 
 3. 继续回溯至第 1 层，由于是最小层，因此 β 改为 5(目前子节点最小只有 5)
 
-   ![](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/12/202111121443129.jpg)
+   ![](assets/202111121443129.jpg)
 
 5. 继续遍历第一层第一个节点的右子树
 
-   ![](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/12/202111121416220.jpg)
+   ![](assets/202111121416220.jpg)
 
 5. 以此类推，获得的最优选择是评分为 6 的路径
 
    > 这是全部遍历的情况，需要继续优化，参考[α-β剪枝](Alpha-Beta.md)
    
-   ![](https://ice-berg.coding.net/p/Other/d/imgur/git/raw/master/2021/11/12/202111121109240.jpg)
+   ![](assets/202111121109240.jpg)
 
 ## 代码实现
 
